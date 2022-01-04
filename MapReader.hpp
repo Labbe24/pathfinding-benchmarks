@@ -3,44 +3,53 @@
 #include <Node.hpp>
 #include <fstream>
 #include <iterator>
+#include <chrono>
+#include <boost/bind/bind.hpp>
 
 #pragma once
 
-std::istream& operator>>(std::istream& i, Node& n)
+ std::istream& operator>>(std::istream& i, Node& n)
 {
-    return i >> n._type;
+    return i >> n.type_;
 }
 
-template<typename T>
-void readMap(GridGraph<T>& g, const std::string& fileName)
-{
-    const unsigned int rows = g.getRows();
-    const unsigned int cols = g.getCols();
+class MapReader {
 
-    //g.clear();
-    //g.resize(rows, cols);
+    public:
 
-    std::vector<T> buffer;
+        template<typename T, typename L>
+        static void readMap(GridGraph<T, L>& g)
+        {
+            const unsigned int rows = g.rows_;
+            const unsigned int cols = g.columns_;
+            unsigned int i = 0;
 
-    std::ifstream mapFile( fileName.c_str() );
-    
-    std::istream_iterator<char> it1( mapFile );
-    std::istream_iterator<char> it2;
+            std::vector<T> buffer;
 
-    copy(it1, it2, back_inserter( buffer ));
+            std::cout << std::endl;
+            std::cout << "Reading file: " << g.getFileName() << std::endl;
 
-    std::cout << "Buffer size: " << buffer.size() << std::endl;
+            std::ifstream mapFile( g.getFileName().c_str() );          
+            std::istream_iterator<char> it1( mapFile );
+            std::istream_iterator<char> it2;
 
-    for (int i = 0; i < buffer.size(); i++)
-    {
-        int row = i / rows;
-        int col = i % cols;
-        g.setNode(row, col, buffer[i]);
-    }
+            copy(it1, it2, back_inserter( buffer ));
+           
+            std::transform(buffer.begin(), buffer.end(), buffer.begin(), boost::bind(&setPos<Node, GridLocation>, boost::placeholders::_1, std::ref(g), std::ref(i), rows, cols));
 
-    g.printSize();
+            buffer.clear(); 
+            mapFile.close();
+        }
 
-    buffer.clear(); 
-    mapFile.close();
-}
+        template<typename T, typename L>
+        static Node setPos(Node n, GridGraph<T, L> &g, unsigned int& i, int rows, int cols)
+        {
+            n.setLocation(i / rows, i % cols);
+            g.setNode(n);
+            i++;
+            return n;
+        }
 
+    private:
+        MapReader() {};
+};

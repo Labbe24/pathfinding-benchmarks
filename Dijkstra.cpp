@@ -1,62 +1,81 @@
 #include <Node.hpp>
+#include <Benchmark.hpp>
 #include <PriorityQueue.cpp>
 #include <unordered_map>
 #include <stdlib.h>
+#include <iostream>
+#include <boost/bind/bind.hpp>
 
-template<typename Location, typename Graph>
-void dijkstra_search
-  (Graph graph,
-   Location start,
-   Location goal,
-   std::unordered_map<Location, Location>& came_from,
-   std::unordered_map<Location, double>& cost_so_far)
-{
-  PriorityQueue<Location, double> frontier;
-  frontier.put(start, 0);
+template<typename L, typename G>
+class Dijkstra {
 
-  came_from[start] = start;
-  cost_so_far[start] = 0;
-  
-  while (!frontier.empty()) {
-    Location current = frontier.get();
+  private:
+    G graph_;
+    L start_;
+    L end_;
+    std::unordered_map<L, L>& from_;
+    std::unordered_map<L, double>& cost_;
 
-    if (current == goal) {
-      break;
+
+  public:
+
+    template<typename T>
+    Dijkstra(Benchmark<T>& b, G graph, L start, L goal, std::unordered_map<L, L>& from, std::unordered_map<L, double>& cost)
+    : from_(from), cost_(cost)
+    { 
+
+      b.attach(boost::bind(&Dijkstra::search, this));
+      graph_ = graph;
+      start_ = start;
+      end_ = goal;
     }
 
-    for (Location next : graph.neighbors(current)) 
+    void search()
     {
-      Node currentNode = graph.getNode(current.x, current.y);
-      Node nextNode = graph.getNode(next.x, next.y);
-      double new_cost = cost_so_far[current] + graph.nodeCost(currentNode, nextNode);
+      std::cout << std::endl << "Applying dijkstra" << std::endl;
+      PriorityQueue<L, double> frontier;
+      frontier.put(start_, 0);
 
-      if (cost_so_far.find(next) == cost_so_far.end()
-          || new_cost < cost_so_far[next]) 
-      {
-        cost_so_far[next] = new_cost;
-        came_from[next] = current;
-        frontier.put(next, new_cost);
+      from_[start_] = start_;
+      cost_[start_] = 0;
+      
+      while (!frontier.empty()) {
+        L current = frontier.get();
+
+        if (current == end_) {
+          break;
+        }
+
+        for (L next : graph_.neighbors(current)) 
+        {
+          Node currentNode = graph_.getNode(current.getX(), current.getY());
+          Node nextNode = graph_.getNode(next.getX(), next.getY());
+          double new_cost = cost_[current] + graph_.cost(currentNode, nextNode);
+
+          if (cost_.find(next) == cost_.end()
+              || new_cost < cost_[next]) 
+          {
+            cost_[next] = new_cost;
+            from_[next] = current;
+            frontier.put(next, new_cost);
+          }
+        }
       }
     }
-  }
-}
 
-template<typename Location>
-std::vector<Location> reconstruct_path(
-  Location start,
-  Location end,
-  std::unordered_map<Location, Location> from)
-{
-  std::vector<Location> path;
-  Location current = end;
+    std::vector<L> reconstruct_path(L start, L end, std::unordered_map<L, L> from)
+    {
+      std::vector<L> path;
+      L current = end;
 
-  while( current != start )
-  {
-    path.push_back(current);
-    current = from[current];
-  }
+      while( current != start )
+      {
+        path.push_back(current);
+        current = from[current];
+      }
 
-  path.push_back(start);
-  std::reverse(path.begin(), path.end());
-  return path;
-}
+      path.push_back(start);
+      std::reverse(path.begin(), path.end());
+      return path;
+    }
+};
