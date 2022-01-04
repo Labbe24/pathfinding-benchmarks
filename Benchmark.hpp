@@ -12,6 +12,7 @@ class Benchmark
 
         void attach(const boost::function<void()>& cb) { cb_ = cb; };
         void start();
+        void done();
 
         void printDurations();
         void printAverageDuration();
@@ -30,10 +31,25 @@ void Benchmark<Timer, num_cycles>::start()
 	for(int i = 0; i < num_cycles; i++)
     {
         timer_.start();
-		cb_();
+
+        try
+        {
+            cb_();
+        }
+        catch(const boost::bad_function_call& e)
+        {
+            std::cout << e.what() << std::endl;
+        }
+		
         double duration = timer_.stop();
         std::cout << "Run #"<< i << " duration: " << duration << " ms" << std::endl;
 	}
+}
+
+template<typename Timer, unsigned int num_cycles>
+void Benchmark<Timer, num_cycles>::done()
+{
+    std::cout << "Finished benchmarking" << std::endl;
 }
 
 template<typename Timer, unsigned int num_cycles>

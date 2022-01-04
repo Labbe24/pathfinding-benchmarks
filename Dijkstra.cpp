@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <boost/bind/bind.hpp>
+#include <boost/signals2.hpp>
 
 template<typename L, typename G>
 class Dijkstra {
@@ -13,6 +14,7 @@ class Dijkstra {
     G graph_;
     L start_;
     L end_;
+    boost::signals2::signal<void()> sig_;
 
   public:
 
@@ -21,6 +23,7 @@ class Dijkstra {
     { 
 
       b.attach(boost::bind(&Dijkstra::search, this));
+      sig_.connect(boost::bind(&Benchmark<T>::done, b));
       graph_ = graph;
       start_ = start;
       end_ = goal;
@@ -58,6 +61,7 @@ class Dijkstra {
           }
         }
       }
+      sig_();
     }
 
     std::vector<L> reconstructPath(L start, L end, std::unordered_map<L, L> from)

@@ -13,8 +13,9 @@
 #include <Benchmark.hpp>
 #include <Timer.hpp>
 
-#define MAP_FILE "map.txt"
 #define MAP_FILES_PATH "maps"
+#define ROWS 512
+#define COLS 512
 
 int main() { 
 
@@ -27,7 +28,7 @@ int main() {
 
     for(auto &entry : std::filesystem::directory_iterator(MAP_FILES_PATH))
     {   
-        GridGraph<Node, GridLocation> g(512, 512, entry.path().c_str());
+        GridGraph<Node, GridLocation> g(ROWS, COLS, entry.path().c_str());
         warcraftGrids.emplace_back(g);
     }
 

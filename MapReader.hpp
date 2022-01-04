@@ -23,7 +23,7 @@ class MapReader {
             unsigned int i = 0;
             std::vector<T> buffer;
 
-            std::cout << "Reading file: " << g.getFileName() << std::endl;
+            std::cout << std::endl << "Reading file: " << g.getFileName() << std::endl;
 
             std::ifstream mapFile( g.getFileName().c_str() );          
             std::istream_iterator<char> it1( mapFile );
