@@ -3,33 +3,55 @@
 #include <MapReader.hpp>
 #include <unordered_map>
 #include <Dijkstra.cpp>
+#include <NodeResource.hpp>
+#include <chrono>
+#include <memory_resource>
+#include <NodeResource.hpp>
+#include <filesystem>
+#include <set>
+#include <string>
+#include <Benchmark.hpp>
+#include <Timer.hpp>
 
 #define MAP_FILE "map.txt"
+#define MAP_FILES_PATH "maps"
 
-int main() {
-    GridGraph<Node> grid(512, 512);
-    readMap<Node>(grid, MAP_FILE);
+int main() { 
 
-    //grid.printGrid();
-    //GridLocation start{50, 450}, goal{80, 333};
+    NodeResource nr; 
+    std::pmr::vector<std::pmr::string> vi (&nr);
+    Benchmark<Timer> benchmarker;
 
-    GridLocation start = grid.getStartLocation();
-    GridLocation end = grid.getEndLocation();
+    std::string path_name = MAP_FILES_PATH;
+    std::vector<GridGraph<Node, GridLocation>> warcraftGrids;
 
-    std::cout << "Start: " << start.x << ", " << start.y << std::endl;
-    std::cout << "End: " << end.x << ", " << end.y << std::endl;
+    for(auto &entry : std::filesystem::directory_iterator(MAP_FILES_PATH))
+    {   
+        GridGraph<Node, GridLocation> g(512, 512, entry.path().c_str());
+        warcraftGrids.emplace_back(g);
+    }
 
-    std::unordered_map<GridLocation, GridLocation> came_from;
-    std::unordered_map<GridLocation, double> cost_so_far;
-    dijkstra_search<GridLocation, GridGraph<Node>>(grid, start, end, came_from, cost_so_far);
-    std::vector<GridLocation> path = reconstruct_path(start, end, came_from);
-
-    /*for(GridLocation l : path)
+    for(GridGraph<Node, GridLocation> grid : warcraftGrids)
     {
-        std::cout << "x: " << l.x << ", y: " << l.y << std::endl;
-    }*/
-    grid.setPath(path);
-    grid.printGrid();
+        try
+        {
+            MapReader::readMap<Node, GridLocation>(grid);
+        }
+        catch(const char* msg)
+        {
+            std::cerr << msg << std::endl;
+        }
+        
+        GridLocation start = grid.getStartLocation();
+        GridLocation end = grid.getEndLocation();
 
+        std::cout << "Start: " << "row " << start.getX() << ", col " << start.getY() << std::endl;
+        std::cout << "End: " << "row " << end.getX() << ", col " << end.getY() << std::endl;
+
+        Dijkstra<GridLocation, GridGraph<Node, GridLocation>> dijkstra(benchmarker, grid, start, end);
+        benchmarker.start();
+        benchmarker.printAverageDuration();
+        benchmarker.printTotalDuration();
+    }
     return 0;
 }

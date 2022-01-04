@@ -3,9 +3,9 @@
 template<typename T, typename priority_t>
 struct PriorityQueue
 {
-    typedef std::pair<priority_t, T> PQElement;
+    typedef std::pair<priority_t, T> element;
 
-    std::priority_queue<PQElement, std::vector<PQElement>,std::greater<PQElement>> elements;
+    std::priority_queue<element, std::vector<element>,std::greater<element>> elements;
 
     inline bool empty() const {
         return elements.empty();
@@ -16,8 +16,8 @@ struct PriorityQueue
     }
     
     T get() {
-        T best_item = elements.top().second;
+        T best_element = elements.top().second;
         elements.pop();
-        return best_item;
+        return best_element;
     }
 };

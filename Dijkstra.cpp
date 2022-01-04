@@ -13,15 +13,11 @@ class Dijkstra {
     G graph_;
     L start_;
     L end_;
-    std::unordered_map<L, L>& from_;
-    std::unordered_map<L, double>& cost_;
-
 
   public:
 
     template<typename T>
-    Dijkstra(Benchmark<T>& b, G graph, L start, L goal, std::unordered_map<L, L>& from, std::unordered_map<L, double>& cost)
-    : from_(from), cost_(cost)
+    Dijkstra(Benchmark<T>& b, G graph, L start, L goal)
     { 
 
       b.attach(boost::bind(&Dijkstra::search, this));
@@ -32,12 +28,13 @@ class Dijkstra {
 
     void search()
     {
-      std::cout << std::endl << "Applying dijkstra" << std::endl;
+      std::unordered_map<L, L> from;
+      std::unordered_map<L, double> cost;
       PriorityQueue<L, double> frontier;
       frontier.put(start_, 0);
 
-      from_[start_] = start_;
-      cost_[start_] = 0;
+      from[start_] = start_;
+      cost[start_] = 0;
       
       while (!frontier.empty()) {
         L current = frontier.get();
@@ -50,32 +47,32 @@ class Dijkstra {
         {
           Node currentNode = graph_.getNode(current.getX(), current.getY());
           Node nextNode = graph_.getNode(next.getX(), next.getY());
-          double new_cost = cost_[current] + graph_.cost(currentNode, nextNode);
+          double new_cost = cost[current] + graph_.cost(currentNode, nextNode);
 
-          if (cost_.find(next) == cost_.end()
-              || new_cost < cost_[next]) 
+          if (cost.find(next) == cost.end()
+              || new_cost < cost[next]) 
           {
-            cost_[next] = new_cost;
-            from_[next] = current;
+            cost[next] = new_cost;
+            from[next] = current;
             frontier.put(next, new_cost);
           }
         }
       }
     }
 
-    std::vector<L> reconstruct_path(L start, L end, std::unordered_map<L, L> from)
+    std::vector<L> reconstructPath(L start, L end, std::unordered_map<L, L> from)
     {
-      std::vector<L> path;
+      std::vector<L> reconstructedPath;
       L current = end;
 
       while( current != start )
       {
-        path.push_back(current);
+        reconstructedPath.push_back(current);
         current = from[current];
       }
 
-      path.push_back(start);
-      std::reverse(path.begin(), path.end());
-      return path;
+      reconstructedPath.push_back(start);
+      std::reverse(reconstructedPath.begin(), reconstructedPath.end());
+      return reconstructedPath;
     }
 };

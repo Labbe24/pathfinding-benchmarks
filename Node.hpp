@@ -1,106 +1,78 @@
 #include <iostream>
+#include <cstring>
 
 #pragma once
 
 class Node
 {
     public:
+        // Constructor
+        Node(const char type = '.');
 
-    // Constructors
-    Node(char type = '.');
+        // Copy constructor
+        Node(const Node& other);
 
-    // Destructor
-    ~Node();
+        // Assignment operator
+        Node& operator=(const Node& other);
 
-    // Copy constructor
-    Node(const Node& other);
+        void printNode();
+        void printCoor();
 
-    // Assignment operator
-    Node& operator=(const Node& other);
+        void setType(const char);
+        const char& getType();
 
-    // Move Constructor
-    Node(Node&& other) noexcept;
 
-    // Move assignment operator
-    Node& operator=(Node&& other) noexcept;
+        void setLocation(const unsigned int x, const unsigned int y);
+        GridLocation getLocation();
 
-    void printNode();
-    void printCoor();
-
-    void setType(const char);
-    const char getType();
-
-    void setLocation(const unsigned int x, const unsigned int y);
-    GridLocation getLocation();
-
-    friend std::istream& operator>> (std::istream& i, Node& n);
+        friend std::istream& operator>> (std::istream& i, Node& n);
 
     private:
-
-    char _type;
-    GridLocation _location;
+        char type_;
+        GridLocation location_; 
 };
 
-Node::~Node()
-{}
-
-Node::Node(char type)
+Node::Node(const char type)
 {
-    this->_type = type;
+    type_ = type;
 }
 
 Node::Node(const Node& other)
 {
-    this->_type = other._type;
+    this->type_ = other.type_;
+    this->location_ = other.location_;
 }
 
 Node& Node::operator=(const Node& other)
 {
-    this->_type = other._type;
-    this->_location = other._location;
-    return *this;
-}
-
-Node::Node(Node&& other) noexcept
-: _type{std::move(other._type)}
-{
-    other._type = '\0';
-}
-
-Node& Node::operator=(Node&& other) noexcept
-{
-    if(this != &other)
-    {
-        this->_type = other._type;
-
-        other._type = '\0';
-    }
+    type_ = other.type_;
+    location_ = other.location_;
     return *this;
 }
 
 void Node::printNode()
 {
-    std::cout << _type;
+    std::cout << type_;
 }
 
 void Node::setType(const char type)
 {
-    _type = type;
+    type_ = type;
 }
 
-const char Node::getType()
+const char& Node::getType()
 {
-    return _type;
+    return type_;
 }
 
 
 void Node::setLocation(const unsigned int x, const unsigned int y)
 {
-    _location.x = x;
-    _location.y = y;
+    location_.x_ = x;
+    location_.y_ = y;
 }
 
 GridLocation Node::getLocation()
 {
-    return _location;
+    return location_;
 }

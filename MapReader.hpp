@@ -20,13 +20,9 @@ class MapReader {
         template<typename T, typename L>
         static void readMap(GridGraph<T, L>& g)
         {
-            const unsigned int rows = g.rows_;
-            const unsigned int cols = g.columns_;
             unsigned int i = 0;
-
             std::vector<T> buffer;
 
-            std::cout << std::endl;
             std::cout << "Reading file: " << g.getFileName() << std::endl;
 
             std::ifstream mapFile( g.getFileName().c_str() );          
@@ -35,7 +31,9 @@ class MapReader {
 
             copy(it1, it2, back_inserter( buffer ));
            
-            std::transform(buffer.begin(), buffer.end(), buffer.begin(), boost::bind(&setPos<Node, GridLocation>, boost::placeholders::_1, std::ref(g), std::ref(i), rows, cols));
+            std::transform(buffer.begin(), buffer.end(), buffer.begin(), boost::bind(&setPos<Node, GridLocation>, boost::placeholders::_1, std::ref(g), std::ref(i), g.rows_, g.columns_));
+
+            if(buffer.empty()) throw "Buffer empty - failed to load map";
 
             buffer.clear(); 
             mapFile.close();

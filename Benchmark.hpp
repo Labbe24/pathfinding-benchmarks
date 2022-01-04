@@ -12,10 +12,13 @@ class Benchmark
 
         void attach(const boost::function<void()>& cb) { cb_ = cb; };
         void start();
-        double averageTime();
+
+        void printDurations();
+        void printAverageDuration();
+        void printTotalDuration();
 
     private:
-        T timer_;
+        Timer timer_;
         boost::function<void()> cb_;
 };
 
@@ -23,20 +26,38 @@ class Benchmark
 template<typename Timer, unsigned int num_cycles>
 void Benchmark<Timer, num_cycles>::start()
 {
-    Timer t1;
-	
+    timer_.reset();
 	for(int i = 0; i < num_cycles; i++)
     {
-        t1.start();
+        timer_.start();
 		cb_();
-        t1.stop();
+        double duration = timer_.stop();
+        std::cout << "Run #"<< i << " duration: " << duration << " ms" << std::endl;
 	}
 }
 
-template<typename Timer, unsigned int num_cycle>
-double Benchmark<Timer, num_cycle>::averageTime()
+template<typename Timer, unsigned int num_cycles>
+void Benchmark<Timer, num_cycles>::printDurations()
 {
-    return 0;
+    unsigned int avg = 0;
+    for(int i = 0; i < num_cycles; i++)
+    {
+        double duration = timer_.elapsedInterval(i);
+        std::cout << "Run #"<< i << " duration: " << duration << " ms" << std::endl;
+	}
 }
 
-// [1, 2, 3, 4, 5]
+template<typename Timer, unsigned int num_cycles>
+void Benchmark<Timer, num_cycles>::printAverageDuration()
+{
+    double avg = timer_.elapsedTotal();;
+    std::cout << "Average duration: " << avg/(double)num_cycles << " ms" << std::endl;
+}
+
+template<typename Timer, unsigned int num_cycles>
+void Benchmark<Timer, num_cycles>::printTotalDuration()
+{
+    double total = timer_.elapsedTotal();;
+    std::cout << "Total duration: " << total << " ms" << std::endl;
+}
+
