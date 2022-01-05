@@ -7,46 +7,43 @@
 #include <boost/bind/bind.hpp>
 #include <boost/signals2.hpp>
 
-template<typename L, typename G>
-class Dijkstra {
 
-  private:
-    G graph_;
-    L start_;
-    L end_;
-    boost::signals2::signal<void()> sig_;
+/* Implementation of basic dijkstra algorithm */
+template<typename N, typename G>
+class Dijkstra {
 
   public:
 
     template<typename T>
-    Dijkstra(Benchmark<T>& b, G graph, L start, L goal)
+    Dijkstra(Benchmark<T>& b, G graph, N start, N end)
     { 
 
       b.attach(boost::bind(&Dijkstra::search, this));
       sig_.connect(boost::bind(&Benchmark<T>::done, b));
       graph_ = graph;
       start_ = start;
-      end_ = goal;
+      end_ = end;
     }
 
+    /* Applys dijkstra to provided grid with start and end markers */
     void search()
     {
-      std::unordered_map<L, L> from;
-      std::unordered_map<L, double> cost;
-      PriorityQueue<L, double> frontier;
+      std::unordered_map<N, N> from;
+      std::unordered_map<N, double> cost;
+      PQ::PriorityQueue<N, double> frontier;
       frontier.put(start_, 0);
 
       from[start_] = start_;
       cost[start_] = 0;
       
       while (!frontier.empty()) {
-        L current = frontier.get();
+        N current = frontier.get();
 
         if (current == end_) {
           break;
         }
 
-        for (L next : graph_.neighbors(current)) 
+        for (N next : graph_.neighbors(current)) 
         {
           Node currentNode = graph_.getNode(current.getX(), current.getY());
           Node nextNode = graph_.getNode(next.getX(), next.getY());
@@ -64,10 +61,11 @@ class Dijkstra {
       sig_();
     }
 
-    std::vector<L> reconstructPath(L start, L end, std::unordered_map<L, L> from)
+    /* Reconstructs found path on provided grid */
+    std::vector<N> reconstructPath(N start, N end, std::unordered_map<N, N> from)
     {
-      std::vector<L> reconstructedPath;
-      L current = end;
+      std::vector<N> reconstructedPath;
+      N current = end;
 
       while( current != start )
       {
@@ -79,4 +77,10 @@ class Dijkstra {
       std::reverse(reconstructedPath.begin(), reconstructedPath.end());
       return reconstructedPath;
     }
+
+      private:
+        G graph_;
+        N start_;
+        N end_;
+        boost::signals2::signal<void()> sig_;
 };

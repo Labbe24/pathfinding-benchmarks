@@ -6,7 +6,7 @@
 class Node
 {
     public:
-        // Constructor
+        // Constructor with default argument
         Node(const char type = '.');
 
         // Copy constructor
@@ -15,20 +15,19 @@ class Node
         // Assignment operator
         Node& operator=(const Node& other);
 
-        void printNode();
-        void printCoor();
-
+        void printNode() const;
+     
         void setType(const char);
-        const char& getType();
+        const char getType() const;
 
+        void setLocation(const int x, const int y);
+        GridLocation getLocation() const;
 
-        void setLocation(const unsigned int x, const unsigned int y);
-        GridLocation getLocation();
-
+        // Used for converting character in .map fil to type Node
         friend std::istream& operator>> (std::istream& i, Node& n);
 
     private:
-        char type_;
+        char type_;             // Helps determine cost of passing through node
         GridLocation location_; 
 };
 
@@ -50,7 +49,7 @@ Node& Node::operator=(const Node& other)
     return *this;
 }
 
-void Node::printNode()
+void Node::printNode() const
 {
     std::cout << type_;
 }
@@ -60,19 +59,19 @@ void Node::setType(const char type)
     type_ = type;
 }
 
-const char& Node::getType()
+const char Node::getType() const
 {
     return type_;
 }
 
 
-void Node::setLocation(const unsigned int x, const unsigned int y)
+void Node::setLocation(const int x, const int y)
 {
     location_.x_ = x;
     location_.y_ = y;
 }
 
-GridLocation Node::getLocation()
+GridLocation Node::getLocation() const
 {
     return location_;
 }

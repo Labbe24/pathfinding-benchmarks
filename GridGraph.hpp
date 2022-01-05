@@ -2,122 +2,146 @@
 #include <iostream>
 #include <algorithm>
 #include <GridLocation.cpp>
-#include <memory_resource>
+#include <memory>
 
 #pragma once
 
-template<typename T, typename L>
+template<typename N, typename L>
 class GridGraph
 {
+    friend class MapReader;
+
     public:
+        // Constructors
+        GridGraph() {};
+        GridGraph(const int rows, const int cols, std::string fileName);
 
-        friend class MapReader;
-
-        GridGraph(){};
-
-        GridGraph(const unsigned int width, const unsigned int height, std::string fileName);
-
-        // Copy constructor
+        // Copy constructor and copy assignment operator
         GridGraph(const GridGraph& other);
-
-        // Copy assignment
         GridGraph& operator=(const GridGraph& other);
 
-        // Pathfinding relevant
-        std::vector<GridLocation> neighbors(GridLocation id) const;
-        bool inBounds(GridLocation id) const;
-        double cost(T from, T to) const;
+        // Move constructor and move assigment operator
+        GridGraph(GridGraph&& other) noexcept;
+        GridGraph& operator=(GridGraph&& other) noexcept;
 
-        void setNode(T t);
-        T getNode(unsigned int x, unsigned int y);
+        // Pathfinding relevant methods
+        std::vector<L> neighbors(L i) const;
+        // Ensures Location i is inside map dimensions
+        bool inBounds(L i) const;
+        // Calculates cost of passing from a node to a node
+        double cost(N from, N to) const;
 
-        GridLocation getStartLocation();
-        GridLocation getEndLocation();
+        void setNode(N t);
+        N getNode(const int x, const int y) const;
 
-        void printGrid();
-        void setPath(const std::vector<GridLocation> path);
+        L getStartLocation() const;
+        L getEndLocation() const;
 
-        unsigned int getRows();
-        unsigned int getCols();
+        void setPath(const std::vector<L> path);
 
-        std::string getFileName();
-
-        void clear();
+        std::string getFileName() const;
+        void printGrid() const;
+        void clear() const;
 
     private:
         std::string fileName_;
-        std::vector<std::vector<T>> grid_nodes;
-        unsigned int rows_;
-        unsigned int columns_;
-        static std::array<GridLocation, 4> DIRS;
-};
+        std::vector<std::vector<N>> grid_nodes; // Vector containg the acutal representation of a .map
+        unsigned int rows_;                     // number of rows in map
+        unsigned int cols_;                     // number of columns in map
+};  
 
-template<typename T, typename L>
-GridGraph<T, L>::GridGraph(const unsigned int rows, const unsigned int columns, std::string fileName)
-{
-    std::cout << "Creating grid with " << rows << " rows and " << columns << " columns" << std::endl;
-    
-    std::vector<std::vector<T>> nodes(rows, std::vector<T> (columns));
+template<typename N, typename L>
+GridGraph<N, L>::GridGraph(const int rows, const int cols, std::string fileName)
+{    
+    std::vector<std::vector<N>> nodes(rows, std::vector<N> (cols));
 
     this->fileName_ = fileName;
     this->grid_nodes = nodes;
     this->rows_ = rows;
-    this->columns_ = columns;
+    this->cols_ = cols;
 }
 
-template<typename T, typename L>
-GridGraph<T, L>::GridGraph(const GridGraph& other)
-{
-    operator=(other);
-}
-
-template<typename T, typename L>
-GridGraph<T, L>& GridGraph<T, L>::operator=(const GridGraph& other)
+template<typename N, typename L>
+GridGraph<N, L>::GridGraph(const GridGraph& other)
 {
     rows_ = other.rows_;
-    columns_ = other.columns_;
+    cols_ = other.cols_;
+    grid_nodes = other.grid_nodes;
+    fileName_ = other.fileName_;
+}
+
+template<typename N, typename L>
+GridGraph<N, L>& GridGraph<N, L>::operator=(const GridGraph& other)
+{
+    rows_ = other.rows_;
+    cols_ = other.cols_;
     grid_nodes = other.grid_nodes;
     fileName_ = other.fileName_;
     return *this;
 }
 
-template<typename T, typename L>
-std::vector<GridLocation> GridGraph<T, L>::neighbors(GridLocation id) const
+template<typename N, typename L>
+GridGraph<N, L>::GridGraph(GridGraph&& other) noexcept
+:   fileName_{std::move(other.fileName_)},
+    grid_nodes{std::move(other.grid_nodes)},  
+    rows_{std::move(other.rows_)}, 
+    cols_{std::move(other.cols_)}
+{}
+
+template<typename N, typename L>
+GridGraph<N, L>& GridGraph<N, L>::operator=(GridGraph&& other) noexcept
+{    
+    if(this != &other)
+    {
+        fileName_= std::move(other.fileName_);
+        grid_nodes = std::move(other.grid_nodes);
+        rows_ = std::move(other.rows_);
+        cols_ = std::move(other.cols_);
+    }
+    return *this;
+}
+
+template<typename N, typename L>
+std::vector<L> GridGraph<N, L>::neighbors(L i) const
 {
     // Basic guarantee
-    std::auto_ptr results(new std::vector<GridLocation>);
+    std::auto_ptr results(new std::vector<L>);
 
-    for (GridLocation dir : DIRS) 
+    std::array<L, 4> dirs = {
+        /* East, West, North, South */
+        GridLocation(1, 0), GridLocation(-1, 0),
+        GridLocation(0, -1), GridLocation(0, 1)
+    };
+
+    for (L dir : dirs) 
     {
-      GridLocation next{id.getX() + dir.getX(), id.getY() + dir.getY()};
+      L next{i.x_ + dir.x_, i.y_ + dir.y_};
 
-      if (inBounds(next)) results->push_back(next);
-    }
-
-    if ((id.getX() + id.getY()) % 2 == 0) 
-    {
-      std::reverse(results->begin(), results->end());
+      if (inBounds(next)) 
+      {
+          results->push_back(next);
+      }
     }
 
     return *results;
 }
 
-template<typename T, typename L>
-bool GridGraph<T, L>::inBounds(GridLocation id) const 
+template<typename N, typename L>
+bool GridGraph<N, L>::inBounds(L i) const 
 {
-    return 0 <= id.getX() && id.getX() < rows_ 
-        && 0 <= id.getY() && id.getY() < columns_;
+    return 0 <= i.x_ && i.x_ < rows_ 
+        && 0 <= i.y_ && i.y_ < cols_;
 }
 
-template<typename T, typename L>
-double GridGraph<T, L>::cost(T from, T to) const
+template<typename N, typename L>
+double GridGraph<N, L>::cost(N from, N to) const
 {
     char node_type = to.getType();
     if(node_type == '.')
     {
         return 1;
     }
-    else if(node_type == 'T')
+    else if(node_type == 'N')
     {
         return 20;
     }
@@ -125,21 +149,21 @@ double GridGraph<T, L>::cost(T from, T to) const
     return 0;
 }
 
-template<typename T, typename L>
-void GridGraph<T, L>::setNode(T t)
+template<typename N, typename L>
+void GridGraph<N, L>::setNode(N t)
 {
     L l = t.getLocation();
     grid_nodes[l.x_][l.y_] = t;
 }
 
-template<typename T, typename L>
-T GridGraph<T, L>::getNode(unsigned int x, unsigned int y)
+template<typename N, typename L>
+N GridGraph<N, L>::getNode(const int x, const int y) const
 {
     return grid_nodes[x][y];
 }
 
-template<typename T, typename L>
-GridLocation GridGraph<T, L>::getStartLocation()
+template<typename N, typename L>
+L GridGraph<N, L>::getStartLocation() const
 {
     for(auto& row : grid_nodes)
     {
@@ -152,11 +176,11 @@ GridLocation GridGraph<T, L>::getStartLocation()
         }    
     }
 
-    return GridLocation{0, 0};
+    return L{0, 0};
 }
 
-template<typename T, typename L>
-GridLocation GridGraph<T, L>::getEndLocation()
+template<typename N, typename L>
+L GridGraph<N, L>::getEndLocation() const
 {
     for(auto& row : grid_nodes)
     {
@@ -169,11 +193,11 @@ GridLocation GridGraph<T, L>::getEndLocation()
         }    
     }
 
-    return GridLocation{0, 0};
+    return L{0, 0};
 }
 
-template<typename T, typename L> 
-void GridGraph<T, L>::printGrid()
+template<typename N, typename L> 
+void GridGraph<N, L>::printGrid() const
 {
     for(auto& row : grid_nodes)
     {
@@ -185,14 +209,14 @@ void GridGraph<T, L>::printGrid()
     }
 }
 
-template<typename T, typename L>
-void GridGraph<T, L>::setPath(const std::vector<GridLocation> path)
+template<typename N, typename L>
+void GridGraph<N, L>::setPath(const std::vector<L> path)
 {
     for(auto& row : grid_nodes)
     {
         for(auto& col : row)
         {
-            for(GridLocation l : path)
+            for(L l : path)
             {
                 if(l == col.getLocation())
                 {
@@ -203,33 +227,25 @@ void GridGraph<T, L>::setPath(const std::vector<GridLocation> path)
     }
 }
 
-template<typename T, typename L>
-unsigned int GridGraph<T, L>::getRows()
-{
-    return rows_;
-}
-
-template<typename T, typename L>
-unsigned int GridGraph<T, L>::getCols()
-{
-    return columns_;
-}
-
-template<typename T, typename L>
-std::string GridGraph<T, L>::getFileName()
+template<typename N, typename L>
+std::string GridGraph<N, L>::getFileName() const
 {
     return fileName_;
 }
 
-template<typename T, typename L>
-void GridGraph<T, L>::clear()
+template<typename N, typename L>
+void GridGraph<N, L>::clear() const
 {
     grid_nodes.clear();
 }
 
-template<typename T, typename L>
-std::array<GridLocation, 4> GridGraph<T, L>::DIRS = {
-        /* East, West, North, South */
-        GridLocation(1, 0), GridLocation(-1, 0),
-        GridLocation(0, -1), GridLocation(0, 1)
+template<typename G>
+struct GraphTraits
+{ };
+
+template<typename N, typename L>
+struct GraphTraits<GridGraph<N, L>>
+{
+    typedef N NodeType;
+    typedef L LocationType;
 };

@@ -2,31 +2,62 @@
 
 #pragma once
 
+/* Simple timer class used by Benchmark to capture time durations using chronos time_points */
 class Timer
 {
     using time_point = std::chrono::_V2::system_clock::time_point;
 
     public:
-        Timer() : time_{0}{}
+        // Constructor
+        Timer() : time_{0}{} 
 
+        // Copy constructor
+        Timer(const Timer& other);
+        // Copy assignemtn operator
+        Timer& operator=(const Timer& other);
+
+        // Move constructor
         Timer(Timer&& other) noexcept;
-
+        // Move assignment operator
         Timer& operator=(Timer&& other) noexcept;
 
-        Timer(const Timer& other);
-
+        // Start time
         void start();
+
+        // Stop time add time to intervals vector and return time
         double stop();
+
+        // Reset time and clear intercals
         void reset();
-        double elapsedInterval(unsigned int i);
-        double elapsedTotal();
+
+        // Returns time for specific interval
+        double elapsedInterval(const int i);
+
+        // Returns total time for all intervals
+        double elapsedTotal() const;
 
     private:
-        double time_;
-        std::vector<double> intervals_;
+        double time_;                       // Captures total time
+        std::vector<double> intervals_;     // Captures time for each run
         time_point started_;
         time_point stopped_;
 };
+
+Timer::Timer(const Timer& other)
+{
+    time_ = other.time_;
+    intervals_ = other.intervals_;
+    started_ = other.started_;
+    stopped_ = other.stopped_;
+}
+Timer& Timer::operator=(const Timer& other)
+{
+    time_ = other.time_;
+    intervals_ = other.intervals_;
+    started_ = other.started_;
+    stopped_ = other.stopped_;
+    return *this;   
+}
 
 Timer::Timer(Timer&& other) noexcept
 :   time_{std::move(other.time_)}, 
@@ -45,14 +76,6 @@ Timer& Timer::operator=(Timer&& other) noexcept
         stopped_ = std::move(other.stopped_);
     }
     return *this;
-}
-
-Timer::Timer(const Timer& other)
-{
-    time_ = other.time_;
-    intervals_ = other.intervals_;
-    started_ = other.started_;
-    stopped_ = other.stopped_;
 }
 
 void Timer::start()
@@ -77,12 +100,12 @@ void Timer::reset()
     intervals_.clear();
 }
 
-double Timer::elapsedInterval(unsigned int i)
+double Timer::elapsedInterval(const int i)
 {
     return intervals_[i];
 }
 
-double Timer::elapsedTotal()
+double Timer::elapsedTotal() const
 {
     return time_;
 }

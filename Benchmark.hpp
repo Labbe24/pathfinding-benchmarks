@@ -5,27 +5,33 @@
 
 #pragma once
 
-template<typename Timer, unsigned int num_cycles = 10>
+/* Class responsible for starting banchmarking process and capturing measured durations */
+template<typename T, unsigned int num_cycles = 10>
 class Benchmark
 {
     public:
 
+        // possibilty for attaching a callbakc funtion
         void attach(const boost::function<void()>& cb) { cb_ = cb; };
+
+        // starts benchmarking
         void start();
+
+        // called by dijkstra using boost::signal2 when pathfinding is finished
         void done();
 
-        void printDurations();
-        void printAverageDuration();
-        void printTotalDuration();
+        void printDurations() const;
+        void printAverageDuration() const;
+        void printTotalDuration() const;
 
     private:
-        Timer timer_;
+        T timer_;
         boost::function<void()> cb_;
 };
 
 
-template<typename Timer, unsigned int num_cycles>
-void Benchmark<Timer, num_cycles>::start()
+template<typename T, unsigned int num_cycles>
+void Benchmark<T, num_cycles>::start()
 {
     timer_.reset();
 	for(int i = 0; i < num_cycles; i++)
@@ -40,20 +46,20 @@ void Benchmark<Timer, num_cycles>::start()
         {
             std::cout << e.what() << std::endl;
         }
-		
+
         double duration = timer_.stop();
-        std::cout << "Run #"<< i << " duration: " << duration << " ms" << std::endl;
+        std::cout << "run #"<< i << " duration: " << duration << " ms" << std::endl;
 	}
 }
 
-template<typename Timer, unsigned int num_cycles>
-void Benchmark<Timer, num_cycles>::done()
-{
-    std::cout << "Finished benchmarking" << std::endl;
+template<typename T, unsigned int num_cycles>
+void Benchmark<T, num_cycles>::done()
+{  
+    std::cout << "Finished ";
 }
 
-template<typename Timer, unsigned int num_cycles>
-void Benchmark<Timer, num_cycles>::printDurations()
+template<typename T, unsigned int num_cycles>
+void Benchmark<T, num_cycles>::printDurations() const
 {
     unsigned int avg = 0;
     for(int i = 0; i < num_cycles; i++)
@@ -63,15 +69,15 @@ void Benchmark<Timer, num_cycles>::printDurations()
 	}
 }
 
-template<typename Timer, unsigned int num_cycles>
-void Benchmark<Timer, num_cycles>::printAverageDuration()
+template<typename T, unsigned int num_cycles>
+void Benchmark<T, num_cycles>::printAverageDuration() const
 {
     double avg = timer_.elapsedTotal();;
     std::cout << "Average duration: " << avg/(double)num_cycles << " ms" << std::endl;
 }
 
-template<typename Timer, unsigned int num_cycles>
-void Benchmark<Timer, num_cycles>::printTotalDuration()
+template<typename T, unsigned int num_cycles>
+void Benchmark<T, num_cycles>::printTotalDuration() const
 {
     double total = timer_.elapsedTotal();;
     std::cout << "Total duration: " << total << " ms" << std::endl;

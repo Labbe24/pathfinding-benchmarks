@@ -5,39 +5,40 @@ class GridLocation {
         friend class Node;
         template<typename T, typename L> friend class GridGraph;
 
-        GridLocation(unsigned int x, unsigned int y);
+        // Constructors
         GridLocation();
-
+        GridLocation(const int x, const int y);
+        
+        // Copy constructor
         GridLocation(const GridLocation& other);
+
+        // Copy assignment operator
         GridLocation& operator=(const GridLocation& other);
 
-        void setX(unsigned int x);
-        void setY(unsigned int y);
-
-        unsigned int getX() const;
-        unsigned int getY() const;
+        int getX() const;
+        int getY() const;
     
         friend bool operator<(const GridLocation& lhs, const GridLocation& rhs)
         {
-            return (lhs.getX() == rhs.getX());
+            return (lhs.x_ > rhs.x_ && lhs.y_ > rhs.y_);
         }
 
         friend bool operator==(const GridLocation& lhs, const GridLocation& rhs)
         {
-            return (lhs.getX() == rhs.getX() && lhs.getY() == rhs.getY());
+            return (lhs.x_ == rhs.x_ && lhs.y_ == rhs.y_);
         }
 
         friend bool operator!=(const GridLocation& lhs, const GridLocation& rhs)
         {
-            return (lhs.getX() != rhs.getX() || lhs.getY() != rhs.getY());
-        }       
+            return (lhs.x_ != rhs.x_ || lhs.y_ != rhs.y_);
+        }
 
     private:
-        unsigned int x_;
-        unsigned int y_;
+        int x_;
+        int y_;
 };
 
-GridLocation::GridLocation(unsigned int x, unsigned int y)
+GridLocation::GridLocation(const int x, const int y)
 :x_(x), y_(y)
 {}
 
@@ -57,31 +58,20 @@ GridLocation& GridLocation::operator=(const GridLocation& other)
     return *this;
 }
 
-void GridLocation::setX(unsigned int x)
-{
-    x_ = x;
-}
-
-void GridLocation::setY(unsigned int y)
-{
-    y_ = y;
-}
-
-unsigned int GridLocation::getX() const
+int GridLocation::getX() const
 {
     return x_;
 }
 
-unsigned int GridLocation::getY() const
+int GridLocation::getY() const
 {
     return y_;
 }
 
+/* Implement hash function to GridLocation into an unordered_set and add to std namespace */
 namespace std {
-/* implement hash function so we can put GridLocation into an unordered_set */
     template <> struct hash<GridLocation> {
     std::size_t operator()(const GridLocation& id) const noexcept {
-        // NOTE: better to use something like boost hash_combine
         return std::hash<int>()(id.getX() ^ (id.getY() << 16));
         }
     };
